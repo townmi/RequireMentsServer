@@ -1,0 +1,31 @@
+{
+    "name": "requirementsserver",
+    "version": "1.0.0",
+    "description": "需求管理平台服务端",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/townmi/RequireMentsServer.git"
+    },
+    "keywords": [
+        "nodejs",
+        "mysql",
+        "express"
+    ],
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+        "express": "~4.2.0",
+        "body-parser": "~1.0.0",
+        "ejs": "~0.8.5",
+        "sequelize": "~3.5.0",
+        "log4js": "~0.6.0"
+    },
+    "bugs": {
+        "url": "https://github.com/townmi/RequireMentsServer/issues"
+    },
+    "homepage": "https://github.com/townmi/RequireMentsServer#readme"
+}
