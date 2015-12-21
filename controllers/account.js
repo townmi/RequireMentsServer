@@ -19,3 +19,10 @@ router.get("/", function (req, res, next) {
     res.end();
 
 });
+
+
+router.post("/", function (req, res, next) {
+
+
+
+});

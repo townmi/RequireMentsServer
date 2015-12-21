@@ -12,37 +12,43 @@ var sequelize = new Sequelize(settings.db, settings.user, settings.password, {ho
     log.info(str+"<!log>");
 }});
 
-var Arts = sequelize.define('Arts', {
+var User = sequelize.define('User', {
     ID: {
         type: Sequelize.INTEGER(100),
         allowNull: true,
         autoIncrement : true,
         primaryKey : true,
-        comment: 'ĞòÁĞºÅ'
+        comment: 'ä¸»é”®'
     },
-    TITLE: {
-        type: Sequelize.STRING(300),
-        allowNull: true,
-        defaultValue: null,
-        comment: 'ÎÄÕÂ±êÌâ',
-    },
-    TITLE_HASH: {
+    EMAIL: {
         type: Sequelize.STRING(50),
         allowNull: true,
         defaultValue: null,
-        comment: 'ÎÄÕÂ±êÌâ¼ÓÃÜ×Ö·û´®',
+        comment: 'é‚®ç®±',
     },
-    CATEGORY: {
+    USERNAME: {
         type: Sequelize.STRING(50),
         allowNull: true,
         defaultValue: null,
-        comment: 'ÎÄÕÂ·ÖÀà',
+        comment: 'ç”¨æˆ·',
     },
-    BODY: {
-        type: Sequelize.TEXT,
+    PASSWORD: {
+        type: Sequelize.STRING(100),
         allowNull: true,
         defaultValue: null,
-        comment: 'ÎÄÕÂÕıÎÄ',
+        comment: 'å¯†ç ',
+    },
+    NICKNAME: {
+        type: Sequelize.STRING(50),
+        allowNull: true,
+        defaultValue: null,
+        comment: 'çœŸå®å§“å',
+    },
+    GROUP: {
+        type: Sequelize.STRING(50),
+        allowNull: true,
+        defaultValue: null,
+        comment: 'ç”¨æˆ·ç»„',
     },
     CREATEDAT: {
         type: Sequelize.DATE
@@ -61,7 +67,7 @@ var Arts = sequelize.define('Arts', {
 // Arts.belongsTo(Category, {as: 'Category', foreignKey: 'CATEGORY'});
 // Category.hasMany(Arts, {as: 'Arts', foreignKey: 'CATEGORY'});
 
-// ¶à±íÁª²é
+//
 // Arts.findAll({limit : 10, order : 'ID asc', include: [{model: Category, as: "Category", attributes: ["NAME"]}]});
 
-module.exports = Arts;
+module.exports = User;
