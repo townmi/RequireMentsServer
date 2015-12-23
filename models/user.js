@@ -26,6 +26,12 @@ var User = sequelize.define('User', {
         defaultValue: null,
         comment: '邮箱',
     },
+    MOBILE: {
+        type: Sequelize.STRING(50),
+        allowNull: true,
+        defaultValue: null,
+        comment: '手机',
+    },
     USERNAME: {
         type: Sequelize.STRING(50),
         allowNull: true,

@@ -32,12 +32,12 @@ app.use(bodyParser.json({ type: 'application/vnd.api+json' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(function(req, res, next) {
-
+    next();
 });
 
 // restfull route
 app.use("/", require("./controllers/index.js"));
-app.use("/account", require("./controllers/account.js"));
+app.use("/passport", require("./controllers/passport.js"));
 
 /// catch 404 and forward to error handler
 app.use(function (req, res, next) {

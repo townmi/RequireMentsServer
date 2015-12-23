@@ -23,6 +23,8 @@
         "jsonwebtoken": "~5.4.0",
         "ejs": "~0.8.5",
         "sequelize": "~3.5.0",
+        "mysql": "~2.0.0",
+        "bluebird": "~2.10.2",
         "log4js": "~0.6.0"
     },
     "bugs": {
