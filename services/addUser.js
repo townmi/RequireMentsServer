@@ -11,7 +11,7 @@ module.exports = function(user){
 
     return User.sync({logging: false}).then(function () {
         if(user.method === "put") {
-            log.info("执行用户查询，可以使用用户名、手机号码或者邮箱账号进行查询！");
+            log.info("执行添加用户，根据传入不同的通行证，给不同的字段填值。");
             if(!!user.username) {
                 return User.upsert({USERNAME : user.username, PASSWORD: user.password});
             } else if(!!user.mobile) {
