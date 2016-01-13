@@ -37,8 +37,8 @@ app.use(function(req, res, next) {
 
 // restfull route
 app.use("/", require("./controllers/index.js"));
-app.use("/passport", require("./controllers/passport.js"));
-
+app.use("/user", require("./controllers/user.js"));
+app.use("/task", require("./controllers/task.js"));
 /// catch 404 and forward to error handler
 app.use(function (req, res, next) {
     var err = new Error('Not Found');
