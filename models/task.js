@@ -20,23 +20,41 @@ var Task = sequelize.define('Task', {
         primaryKey : true,
         comment: '主键'
     },
+    TASKID: {
+        type: Sequelize.INTEGER(100),
+        allowNull: true,
+        primaryKey : true,
+        comment: '需求编号'
+    },
     CREATOR: {
         type: Sequelize.STRING(250),
         allowNull: true,
         defaultValue: null,
-        comment: '需求建立人',
+        comment: '需求建立人'
     },
     NAME: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(300),
         allowNull: true,
         defaultValue: null,
-        comment: '需求名称',
+        comment: '需求名称'
     },
-    CODE: {
+    BELONG: {
         type: Sequelize.STRING(250),
         allowNull: true,
         defaultValue: null,
-        comment: '需求编号',
+        comment: '归属工程'
+    },
+    BRIEF: {
+        type: Sequelize.STRING(250),
+        allowNull: true,
+        defaultValue: null,
+        comment: '需求简介'
+    },
+    REVIEWUSER: {
+        type: Sequelize.STRING(250),
+        allowNull: true,
+        defaultValue: null,
+        comment: '需求审核主管'
     },
     CREATEDAT: {
         type: Sequelize.DATE

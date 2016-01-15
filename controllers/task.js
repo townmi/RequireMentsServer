@@ -10,23 +10,18 @@ var jwt = require('jsonwebtoken');
 var log = require("../services/log.js");
 var encode = require("../services/encode.js");
 var qTask = require("../services/queryTask.js");
+var qUser = require("../services/queryUser.js");
 var aTask = require("../services/addTask.js");
-
-
-var Validator = {
-    username: /^[A-Za-z0-9]+$/,
-    mobile: /^1[3,4,5,7,8]{1}[0-9]{9}$/,
-    email: /^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/,
-    nickname: /^[A-Za-z0-9\u4E00-\u9FA5]+$/
-};
 
 module.exports = router;
 
 
 router.get("/", function (req, res) {
-
+    res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
     log.info("进入需求查询接口");
 
+    var task = {where: {}};
+    
     Promise.resolve(qTask()).then(function (data) {
         console.log(data)
     });
@@ -34,17 +29,56 @@ router.get("/", function (req, res) {
 });
 
 router.post("/", function (req, res) {
+    res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+    console.log(1);
+});
 
+router.put("/", function (req, res) {
+    res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
     log.info("进入需求创建接口");
 
-    var example = {
-        name: "乐音满是的",
-        creator: "默认"
+    var task = {};
 
-    };
+    if(!!req.body){
 
-    Promise.resolve(aTask(example)).then(function (data) {
-        console.log(data)
-    });
+        var tokenJson = jwt.verify(req.body.token, "secret");
+        var tokenIsJson = typeof(tokenJson) == "object" && Object.prototype.toString.call(tokenJson).toLowerCase() == "[object object]" && !tokenJson.length;
 
+        if(tokenIsJson) {
+
+            task.NAME = req.body.name;
+            task.BRIEF = req.body.brief;
+            task.BELONG = req.body.belong;
+            task.REVIEWUSER = req.body.reviewUser.userid;
+
+            Promise.resolve(qUser({where: {USERNAME: tokenJson.who}})).then(function (data) {
+                if(!!data && !!data.length) {
+                    return Promise.resolve(aTask(task));
+                } else {
+                    log.warn("需求创建失败, TOKEN数据错误，需要重新认证");
+                    res.send({status: "fail", code: 3, msg: "需求创建失败，TOKEN数据错误，需要重新认证。"});
+                    return res.end();
+                }
+            }).then(function (data) {
+                if(!!data){
+                    log.info("需求创建成功");
+                    res.send({status: "success", code: 0, msg: "需求创建成功。"});
+                    return res.end();
+                } else {
+                    log.warn("需求创建失败");
+                    res.send({status: "fail", code: 4, msg: "需求创建失败，请联系系统管理员。"});
+                    return res.end();
+                }
+            });
+
+        } else {
+            log.warn("需求创建失败, TOKEN失效，需要重新认证");
+            res.send({status: "fail", code: 2, msg: "需求创建失败，TOKEN失效，需要重新认证。"});
+            return res.end();
+        }
+    } else {
+        log.warn("需求创建接口，请求数据为空");
+        res.send({status: "fail", code: 1, msg: "请求失败，没有请求信息"});
+        return res.end();
+    }
 });

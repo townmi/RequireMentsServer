@@ -20,41 +20,53 @@ var User = sequelize.define('User', {
         primaryKey : true,
         comment: '主键'
     },
+    USERID: {
+        type: Sequelize.INTEGER(100),
+        allowNull: true,
+        defaultValue: null,
+        comment: '用户ID'
+    },
     EMAIL: {
         type: Sequelize.STRING(50),
         allowNull: true,
         defaultValue: null,
-        comment: '邮箱',
+        comment: '邮箱'
     },
     MOBILE: {
         type: Sequelize.STRING(50),
         allowNull: true,
         defaultValue: null,
-        comment: '手机',
+        comment: '手机'
     },
     USERNAME: {
         type: Sequelize.STRING(50),
         allowNull: true,
         defaultValue: null,
-        comment: '用户',
+        comment: '用户'
     },
     PASSWORD: {
         type: Sequelize.STRING(100),
         allowNull: true,
         defaultValue: null,
-        comment: '密码',
+        comment: '密码'
     },
     NICKNAME: {
         type: Sequelize.STRING(50),
         allowNull: true,
         defaultValue: null,
-        comment: '真实姓名',
+        comment: '真实姓名'
+    },
+    USERROLE: {
+        type: Sequelize.STRING(150),
+        allowNull: true,
+        defaultValue: null,
+        comment: '用户角色'
     },
     GROUP: {
         type: Sequelize.STRING(50),
         allowNull: true,
         defaultValue: null,
-        comment: '用户组',
+        comment: '用户组'
     },
     CREATEDAT: {
         type: Sequelize.DATE
@@ -66,7 +78,7 @@ var User = sequelize.define('User', {
     createdAt: 'CREATEDAT',
     updatedAt: 'UPDATEAT',
     charset: 'utf8',
-    collate: 'utf8_general_ci',
+    collate: 'utf8_general_ci'
 });
 
 

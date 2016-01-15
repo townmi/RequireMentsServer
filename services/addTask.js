@@ -11,7 +11,7 @@ module.exports = function(sql){
 
     return Task.sync({logging: false}).then(function () {
 
-        return Task.upsert({NAME: sql.name, CREATOR: sql.creator});
+        return Task.upsert(sql);
 
     }).then(
         function (data) {
