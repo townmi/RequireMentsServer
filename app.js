@@ -31,8 +31,19 @@ app.use(bodyParser.json({ type: 'application/vnd.api+json' }));
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use(function(req, res, next) {
+/*app.use(function(req, res, next) {
     next();
+});*/
+
+//allow custom header and CORS
+app.all('*',function (req, res, next) {
+    res.header('Access-Control-Allow-Origin', req.headers.origin);
+    res.header('Access-Control-Allow-Methods', 'PUT, POST, GET, DELETE');
+    if (req.method === 'OPTIONS') {
+        res.send(200);
+    } else {
+        next();
+    }
 });
 
 // restfull route

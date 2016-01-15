@@ -24,7 +24,6 @@ var Validator = {
 module.exports = router;
 
 router.get("/", function (req, res) {
-    res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
     log.info("进入用户查询接口，需要先验证是否登陆，是否是root用户，在提取用户信息");
 
     var user, jsonpCallback = req.query.callback ? req.query.callback : null;
@@ -53,9 +52,7 @@ router.get("/", function (req, res) {
 
 });
 
-
 router.post("/", function (req, res) {
-    res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
     log.info("进入登陆认证接口，需要先验证是否有登陆信息，在认证");
     /**
      * [认证API]
@@ -75,12 +72,12 @@ router.post("/", function (req, res) {
         res.send({status: "fail", code: 3, msg: "请求失败，登陆通行证为空"});
         return res.end();
     } else {
-        if (Validator.username.test(req.body.tmpname)) {
-            user.where.USERNAME = req.body.tmpname;
+        if (Validator.email.test(req.body.tmpname)) {
+            user.where.EMAIL = req.body.tmpname;
         } else if (Validator.mobile.test(req.body.tmpname)) {
             user.where.MOBILE = req.body.tmpname;
-        } else if (Validator.email.test(req.body.tmpname)) {
-            user.where.EMAIL = req.body.tmpname;
+        } else if (Validator.username.test(req.body.tmpname)) {
+            user.where.USERNAME = req.body.tmpname;
         } else {
             res.send({status: "fail", code: 4, msg: "请求失败，登陆通行证不合法"});
             return res.end();
@@ -126,7 +123,6 @@ router.post("/", function (req, res) {
 });
 
 router.put("/", function (req, res) {
-    res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
     log.info("进入注册接口，需要先验证是否已经注册，在进行注册。");
     /**
      * [注册API，暂时不开放。]
@@ -149,12 +145,12 @@ router.put("/", function (req, res) {
         res.send({status: "fail", code: 3, msg: "请求失败，通行证为空"});
         return res.end();
     } else {
-        if(Validator.username.test(req.body.tmpname)){
-            user.where.USERNAME = req.body.tmpname;
+        if(Validator.email.test(req.body.tmpname)){
+            user.where.EMAIL = req.body.tmpname;
         } else if(Validator.mobile.test(req.body.tmpname)) {
             user.where.MOBILE = req.body.tmpname;
-        } else if(Validator.email.test(req.body.tmpname)) {
-            user.where.EMAIL = req.body.tmpname;
+        } else if(Validator.username.test(req.body.tmpname)) {
+            user.where.USERNAME = req.body.tmpname;
         } else {
             log.warn("注册失败，登陆通行证不合法");
             res.send({status: "fail", code: 4, msg: "请求失败，登陆通行证不合法"});
@@ -186,11 +182,9 @@ router.put("/", function (req, res) {
 });
 
 router.delete("/", function (req, res) {
-    res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
 });
 
 router.get("/reviewlist", function (req, res) {
-    res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
     log.info("进入审核人员查询接口，需要先验证用户是否登陆。");
 
     var user = {where: {USERROLE: "leader", GROUP: "PM"}};

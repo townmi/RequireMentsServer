@@ -8,16 +8,14 @@ var Promise = require("bluebird");
 var jwt = require('jsonwebtoken');
 
 var log = require("../services/log.js");
-var encode = require("../services/encode.js");
+//var encode = require("../services/encode.js");
 var qTask = require("../services/queryTask.js");
 var qUser = require("../services/queryUser.js");
 var aTask = require("../services/addTask.js");
 
 module.exports = router;
 
-
 router.get("/", function (req, res) {
-    res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
     log.info("进入需求查询接口");
 
     var task = {where: {}};
@@ -29,12 +27,15 @@ router.get("/", function (req, res) {
 });
 
 router.post("/", function (req, res) {
-    res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
-    console.log(1);
+    log.info("进入需求查询接口（与当前用户匹配的需求）");
+    var task  = {where: {}};
+
+    Promise.resolve(qTask()).then(function (data) {
+
+    });
 });
 
 router.put("/", function (req, res) {
-    res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
     log.info("进入需求创建接口");
 
     var task = {};
