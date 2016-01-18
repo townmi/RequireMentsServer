@@ -10,24 +10,14 @@ var User = require("../models/user.js");
 module.exports = function(sql){
 
     return User.sync({logging: false}).then(function () {
-        /*if(user.method === "put") {
-            log.info("执行添加用户，根据传入不同的通行证，给不同的字段填值。");
-            if(!!user.username) {
-                return User.upsert({USERNAME : user.username, PASSWORD: user.password});
-            } else if(!!user.mobile) {
-                return User.upsert({MOBILE : user.mobile, PASSWORD: user.password});
-            } else if (!!user.email) {
-                return User.upsert({EMAIL : user.email, PASSWORD: user.password});
-            }
-        }*/
         return User.upsert(sql);
     }).then(
         function (data) {
-            return data;
+            return User.findAll({where: sql});
         },
         function (err) {
             log.error(err+"<!log>");
-            return err;
+            return null;
         }
     );
 };

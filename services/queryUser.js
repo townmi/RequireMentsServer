@@ -37,7 +37,7 @@ module.exports = function(sql){
         },
         function (err) {
             log.error(err+"<!log>");
-            return err;
+            return null;
         }
     );
 };

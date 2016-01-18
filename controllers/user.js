@@ -12,7 +12,7 @@ var encode = require("../services/encode.js");
 var strEnc = require("../services/strEnc.js");
 var qUser = require("../services/queryUser.js");
 var aUser = require("../services/addUser.js");
-
+var uUser = require("../services/updateUser.js");
 
 var Validator = {
     username: /^[A-Za-z0-9]+$/,
@@ -26,9 +26,7 @@ module.exports = router;
 router.get("/", function (req, res) {
     log.info("进入用户查询接口，需要先验证是否登陆，是否是root用户，在提取用户信息");
 
-    var user, jsonpCallback = req.query.callback ? req.query.callback : null;
-
-
+    var user;
 
     if(!!req.body.token) {
         var tokenJson = jwt.verify(req.body.token, "secret");
@@ -43,11 +41,7 @@ router.get("/", function (req, res) {
             res.send({status: "fail", code: 1, msg: "请求失败，请求数据空"});
         }
     } else {
-        if(jsonpCallback) {
-            res.send(jsonpCallback+'('+JSON.stringify({status: "fail", code: 1, msg: "请求失败，请求数据空"})+')');
-        } else {
-            res.send({status: "fail", code: 1, msg: "请求失败，请求数据空"});
-        }
+        res.send({status: "fail", code: 1, msg: "请求失败，请求数据空"});
     }
 
 });
@@ -85,12 +79,12 @@ router.post("/", function (req, res) {
     }
 
     user.where.PASSWORD = encode(strEnc.strDec(req.body.password, req.body.tmpname, req.body.tmpname, req.body.tmpname));
-
+    console.log(user);
     Promise.resolve(qUser(user)).then(function (data) {
         if(!!data && !!data.length) {
             var token = jwt.sign({
                 who: data[0].dataValues.USERNAME,
-                group: data[0].dataValues.GROUP
+                id: data[0].dataValues.ID
             }, "secret");
             res.send({status: "success", code: 0, msg: "用户认证成功.", token: token});
             return res.end();
@@ -100,26 +94,6 @@ router.post("/", function (req, res) {
         }
     });
 
-    /*if(!!req.header.cookie) {
-        var decoded = jwt.verify(req.header.cookie, 'shhhhh');
-        if(decoded.username === user.username) {
-            log.info("用户的cookie没有失效，匹配用户的cookie是否是本人。");
-            res.send({status: "success", code: 0, msg: "用户已经认证成功，无需再次认证"});
-            return res.end();
-        } else {
-            Promise.resolve(qUser(user)).then(function (data) {
-                if(!!data.length) {
-                    res.send({status: "success", code: 0, msg: "用户认证成功."});
-                    return res.end();
-                } else {
-                    res.send({status: "success", code: 0, msg: "用户认证成功."});
-                    return res.end();
-                }
-            });
-        }
-    } else {
-
-    }*/
 });
 
 router.put("/", function (req, res) {
@@ -158,19 +132,27 @@ router.put("/", function (req, res) {
         }
     }
 
+
     Promise.resolve(qUser(user)).then(function (data) {
         if(!!data && !!data.length) {
             log.warn("注册失败，通行证已经注册。");
             res.send({status: "fail", code: 5, msg: "请求失败，通行证已经注册，请登陆!"});
             return res.end();
         } else {
-            user.where.PASSWORD = encode(req.body.password);
+            console.log(strEnc.strDec(req.body.password, req.body.tmpname, req.body.tmpname, req.body.tmpname));
+            user.where.PASSWORD = encode(strEnc.strDec(req.body.password, req.body.tmpname, req.body.tmpname, req.body.tmpname));
+            console.log(user);
             return Promise.resolve(aUser(user.where));
         }
     }).then(function (data) {
         if(!!data){
+            var token = jwt.sign({
+                who: data[0].dataValues.USERNAME,
+                id: data[0].dataValues.ID
+            }, "secret");
+
             log.info("注册成功");
-            res.send({status: "success", code: 0, msg: "通行证注册成功。"});
+            res.send({status: "success", code: 0, msg: "通行证注册成功。", token: token});
             return res.end();
         } else {
             log.warn("注册失败，通行证注册失败");
@@ -183,6 +165,8 @@ router.put("/", function (req, res) {
 
 router.delete("/", function (req, res) {
 });
+
+
 
 router.get("/reviewlist", function (req, res) {
     log.info("进入审核人员查询接口，需要先验证用户是否登陆。");
@@ -200,5 +184,102 @@ router.get("/reviewlist", function (req, res) {
             return res.send({status: "fail", code: 1, msg: "获取数据失败"});
         }
     });
+
+});
+
+router.post("/info", function (req, res) {
+    log.info("进入用户查询接口，需要先验证是否登陆，是否是root用户，在提取用户信息");
+
+    var user = {where: {}};
+
+    if(!!req.body.token) {
+        var tokenJson = jwt.verify(req.body.token, "secret");
+        var tokenIsJson = typeof(tokenJson) == "object" && Object.prototype.toString.call(tokenJson).toLowerCase() == "[object object]" && !tokenJson.length;
+        if( tokenIsJson ) {
+            user.where.USERNAME = tokenJson.who;
+            user.where.GROUP = tokenJson.group;
+
+            Promise.resolve(qUser(user)).then(function (data) {
+                if(!!data && !!data.length) {
+                    var userData = {
+                        id: data[0].dataValues.ID,
+                        email: data[0].dataValues.EMAIL,
+                        mobile: data[0].dataValues.MOBILE,
+                        username: data[0].dataValues.USERNAME,
+                        nickname: data[0].dataValues.NICKNAME,
+                        userrole: data[0].dataValues.USERROLE,
+                        group: data[0].dataValues.GROUP
+                    };
+
+                    res.send({"status": "success", code: 0, "data": userData, mgs: ""});
+                    return res.end();
+                } else {
+                    log.warn("修改资料失败，用户认证信息不合法。");
+                    res.send({status: "fail", code: 3, msg: "修改资料失败，用户认证信息不合法，请重新登陆。"});
+                    return res.end();
+                }
+            });
+        } else {
+            res.send({status: "fail", code: 2, msg: "修改资料失败，TOKEN失效，需要重新认证。"});
+        }
+    } else {
+        res.send({status: "fail", code: 1, msg: "修改资料失败，用户未登录，请先登录。"});
+    }
+});
+
+router.put("/info", function (req, res) {
+    log.info("进入个人资料修改接口，需要先验证是否有登陆信息，在认证");
+    /**
+     * [认证API]
+     * @param {Object} user 用户信息，通过对req.body进行严格的筛选，最后对密码加密。
+     * @param {String} status 返回的认证信息的状态，仅有两种状态success和fail。
+     * @param {Number} code 返回认证信息的状态编码，0(验证成功) 1(没有请求信息), 2(密码为空), 3(通行证为空), 4(登陆通行证不合法), 5(通行证和密码不匹配)。
+     * @param {String} msg 返回认证信息的描述。
+     */
+    var user = {where: {}};
+
+    if(!!req.body.token) {
+        var tokenJson = jwt.verify(req.body.token, "secret");
+        var tokenIsJson = typeof(tokenJson) == "object" && Object.prototype.toString.call(tokenJson).toLowerCase() == "[object object]" && !tokenJson.length;
+        if( tokenIsJson ) {
+            user.where.USERNAME = tokenJson.who;
+            user.where.ID = tokenJson.id;
+
+            Promise.resolve(qUser(user)).then(function (data) {
+                if(!!data && !!data.length) {
+                    var newData = {
+                        NICKNAME: req.body.nickname,
+                        MOBILE: req.body.mobile,
+                        EMAIL: req.body.email,
+                        GROUP: req.body.group.group,
+                        USERROLE: req.body.userrole
+                    };
+                    return Promise.resolve(uUser(newData, user));
+                } else {
+                    log.warn("修改资料失败，用户认证信息不合法。");
+                    res.send({status: "fail", code: 3, msg: "修改资料失败，用户认证信息不合法，请重新登陆。"});
+                    return res.end();
+                }
+            }).then(function (data) {
+                if(!!data && !!data.length) {
+                    if(!data[0]){
+                        res.send({status: "fail", code: 5, msg: "修改资料失败，用户认证信息不合法，请重新登陆。"});
+                        return res.end();
+                    } else {
+                        res.send({status: "success", code: 0, msg: "修改资料成功。"});
+                        return res.end();
+                    }
+                } else {
+                    res.send({status: "fail", code: 4, msg: "修改资料失败，请联系系统管理员。"});
+                    return res.end();
+                }
+            });
+
+        } else {
+            res.send({status: "fail", code: 2, msg: "修改资料失败，TOKEN失效，需要重新认证。"});
+        }
+    } else {
+        res.send({status: "fail", code: 1, msg: "修改资料失败，用户未登录，请先登录。"});
+    }
 
 });
