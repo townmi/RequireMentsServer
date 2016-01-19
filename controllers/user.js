@@ -197,7 +197,7 @@ router.post("/info", function (req, res) {
         var tokenIsJson = typeof(tokenJson) == "object" && Object.prototype.toString.call(tokenJson).toLowerCase() == "[object object]" && !tokenJson.length;
         if( tokenIsJson ) {
             user.where.USERNAME = tokenJson.who;
-            user.where.GROUP = tokenJson.group;
+            user.where.ID = tokenJson.id;
 
             Promise.resolve(qUser(user)).then(function (data) {
                 if(!!data && !!data.length) {
@@ -247,14 +247,18 @@ router.put("/info", function (req, res) {
 
             Promise.resolve(qUser(user)).then(function (data) {
                 if(!!data && !!data.length) {
-                    var newData = {
-                        NICKNAME: req.body.nickname,
-                        MOBILE: req.body.mobile,
-                        EMAIL: req.body.email,
-                        GROUP: req.body.group.group,
-                        USERROLE: req.body.userrole
+                    var checkDataSql = {
+                        where: {
+                            ID: {ne: tokenJson.id},
+                            $or: [
+                                {USERNAME: req.body.username},
+                                {NICKNAME: req.body.nickname},
+                                {MOBILE: req.body.mobile},
+                                {EMAIL: req.body.email}
+                            ]
+                        }
                     };
-                    return Promise.resolve(uUser(newData, user));
+                    return Promise.resolve(qUser(checkDataSql));
                 } else {
                     log.warn("修改资料失败，用户认证信息不合法。");
                     res.send({status: "fail", code: 3, msg: "修改资料失败，用户认证信息不合法，请重新登陆。"});
@@ -262,15 +266,31 @@ router.put("/info", function (req, res) {
                 }
             }).then(function (data) {
                 if(!!data && !!data.length) {
+                    log.warn("修改资料失败，提交信息有重复。");
+                    res.send({status: "fail", code: 4, msg: "修改资料失败，用户名、中文名、手机号或者邮箱账号已经有人使用。"});
+                    return res.end();
+                } else {
+                    var newData = {
+                        USERNAME: req.body.username,
+                        NICKNAME: req.body.nickname,
+                        MOBILE: req.body.mobile,
+                        EMAIL: req.body.email,
+                        GROUP: req.body.group.group,
+                        USERROLE: req.body.userrole
+                    };
+                    return Promise.resolve(uUser(newData, user));
+                }
+            }).then(function (data) {
+                if(!!data && !!data.length) {
                     if(!data[0]){
-                        res.send({status: "fail", code: 5, msg: "修改资料失败，用户认证信息不合法，请重新登陆。"});
+                        res.send({status: "fail", code: 6, msg: "修改资料失败，用户认证信息不合法，请重新登陆。"});
                         return res.end();
                     } else {
                         res.send({status: "success", code: 0, msg: "修改资料成功。"});
                         return res.end();
                     }
                 } else {
-                    res.send({status: "fail", code: 4, msg: "修改资料失败，请联系系统管理员。"});
+                    res.send({status: "fail", code: 5, msg: "修改资料失败，请联系系统管理员。"});
                     return res.end();
                 }
             });

@@ -32,7 +32,7 @@ router.post("/", function (req, res) {
 
     Promise.resolve(qTask()).then(function (data) {
 
-    });
+    });d
 });
 
 router.put("/", function (req, res) {
