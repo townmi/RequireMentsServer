@@ -25,7 +25,8 @@
         "sequelize": "~3.5.0",
         "mysql": "~2.0.0",
         "bluebird": "~2.10.2",
-        "log4js": "~0.6.0"
+        "log4js": "~0.6.0",
+        "formidable": "~1.0.17"
     },
     "bugs": {
         "url": "https://github.com/townmi/RequireMentsServer/issues"

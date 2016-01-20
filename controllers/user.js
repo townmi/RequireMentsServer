@@ -177,7 +177,7 @@ router.get("/reviewlist", function (req, res) {
         if(!!data && !!data.length) {
             var resData = [];
             for(var i = 0; i < data.length; i++) {
-                resData.push({username: data[i].dataValues.USERNAME, userrole: data[i].dataValues.USERROLE, userid: data[i].dataValues.ID, group: data[i].dataValues.GROUP});
+                resData.push({username: data[i].dataValues.USERNAME, nickname: data[i].dataValues.NICKNAME, userrole: data[i].dataValues.USERROLE, userid: data[i].dataValues.ID, group: data[i].dataValues.GROUP});
             }
             res.send({status: "success", code: 0, data: resData, msg: "请求成功，审核人员明细已返回。"});
         } else {

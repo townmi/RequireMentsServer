@@ -20,23 +20,47 @@ var Task = sequelize.define('Task', {
         primaryKey : true,
         comment: '主键'
     },
-    TASKID: {
-        type: Sequelize.INTEGER(100),
-        allowNull: true,
-        primaryKey : true,
+    TASK_ID: {
+        type: Sequelize.STRING(200),
+        allowNull: false,
+        defaultValue: "",
         comment: '需求编号'
     },
-    CREATOR: {
+    TASK_STATUS: {
+        type: Sequelize.INTEGER(100),
+        allowNull: false,
+        defaultValue: 0,
+        comment: '需求状态'
+    },
+    CREATOR_ID: {
+        type: Sequelize.INTEGER(100),
+        allowNull: false,
+        defaultValue: 0,
+        comment: '需求建立人ID'
+    },
+    CREATOR_NICKNAME: {
         type: Sequelize.STRING(250),
-        allowNull: true,
-        defaultValue: null,
-        comment: '需求建立人'
+        allowNull: false,
+        defaultValue: "",
+        comment: '需求建立人中文名字'
+    },
+    CREATOR_GROUP: {
+        type: Sequelize.STRING(100),
+        allowNull: false,
+        defaultValue: "",
+        comment: '需求建立人所属组织'
     },
     NAME: {
         type: Sequelize.STRING(300),
         allowNull: true,
         defaultValue: null,
         comment: '需求名称'
+    },
+    PRIORITY: {
+        type: Sequelize.INTEGER(50),
+        allowNull: false,
+        defaultValue: 0,
+        comment: '需求优先级'
     },
     BELONG: {
         type: Sequelize.STRING(250),
@@ -50,11 +74,23 @@ var Task = sequelize.define('Task', {
         defaultValue: null,
         comment: '需求简介'
     },
-    REVIEWUSER: {
+    REVIEW_ID: {
+        type: Sequelize.INTEGER(100),
+        allowNull: true,
+        defaultValue: null,
+        comment: '需求审核主管ID'
+    },
+    REVIEW_NICKNAME: {
+        type: Sequelize.STRING(250),
+        allowNull: false,
+        defaultValue: "",
+        comment: '需求审核人中文名字'
+    },
+    REVIEW_COMMENT: {
         type: Sequelize.STRING(250),
         allowNull: true,
         defaultValue: null,
-        comment: '需求审核主管'
+        comment: '需求审核主管审核意见'
     },
     CREATEDAT: {
         type: Sequelize.DATE
@@ -63,8 +99,10 @@ var Task = sequelize.define('Task', {
         type: Sequelize.DATE
     }
 }, {
+    timestamps: true,
     createdAt: 'CREATEDAT',
     updatedAt: 'UPDATEAT',
+    paranoid: true,
     charset: 'utf8',
     collate: 'utf8_general_ci',
 });
