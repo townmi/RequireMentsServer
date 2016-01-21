@@ -7,6 +7,7 @@ var Sequelize = require("sequelize");
 var settings = require("../config/db.js");
 
 var log = require("../services/log.js");
+var File = require("./file.js");
 
 var sequelize = new Sequelize(settings.db, settings.user, settings.password, {host : settings.host, port : settings.port, dialect : 'mysql', logging: function (str) {
     log.info(str+"<!log>");
@@ -16,14 +17,13 @@ var Task = sequelize.define('Task', {
     ID: {
         type: Sequelize.INTEGER(100),
         allowNull: true,
-        autoIncrement : true,
-        primaryKey : true,
         comment: '主键'
     },
     TASK_ID: {
         type: Sequelize.STRING(200),
         allowNull: false,
         defaultValue: "",
+        primaryKey : true,
         comment: '需求编号'
     },
     TASK_STATUS: {
@@ -102,14 +102,19 @@ var Task = sequelize.define('Task', {
     timestamps: true,
     createdAt: 'CREATEDAT',
     updatedAt: 'UPDATEAT',
-    paranoid: true,
+    //paranoid: true,
     charset: 'utf8',
-    collate: 'utf8_general_ci',
+    collate: 'utf8_general_ci'
 });
 
+//File.belongsTo(Task, {as: 'Task', foreignKey: 'TASK_ID'});
+//Task.hasMany(File, {as: 'File', foreignKey: 'TASK_ID'});
 
-// Arts.belongsTo(Category, {as: 'Category', foreignKey: 'CATEGORY'});
-// Category.hasMany(Arts, {as: 'Arts', foreignKey: 'CATEGORY'});
+//File.belongsTo(Task, {as: 'Task', foreignKey: 'TASK_ID'});
+//Task.hasMany(File, {as: 'File', foreignKey: 'TASK_ID'});
+//
+//File.belongsTo(Task);
+//Task.hasMany(File, {as: 'File', foreignKey: 'TASK_ID'});
 
 //
 // Arts.findAll({limit : 10, order : 'ID asc', include: [{model: Category, as: "Category", attributes: ["NAME"]}]});

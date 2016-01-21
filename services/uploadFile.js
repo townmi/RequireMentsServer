@@ -8,12 +8,10 @@ var path = require("path");
 
 var formidable = require('formidable');
 
-
 var encode = require("./encode.js");
 var log = require("./log.js");
 
-var config = {}, callbackJson = {success: true, code: 0, msg: ""};
-var sql_resource = {};
+var callbackJson = {success: true, code: 0, msg: ""}, sqlResource = {};
 var form = new formidable.IncomingForm();
 
 form.uploadDir = "./public/upload/";
@@ -28,14 +26,17 @@ module.exports = function(iostream, callback) {
     form.parse(iostream, function (err, fields, files){
         log.info("进入文件写服务。");
 
+        callbackJson.token = fields.token;
+        callbackJson.taskid = fields.taskid;
+
+        sqlResource.TASK_ID = fields.taskid;
         var oldPath = files.taskFile.path;
 
-        sql_resource.name = files.taskFile.name.split(".");
-        var fileType = "."+sql_resource.name.pop();
-        sql_resource.name = sql_resource.name.join("");
+        sqlResource.NICKNAME = files.taskFile.name.split(".")[0];
+        var fileType = "."+files.taskFile.name.split(".").pop();
 
-        var newPath = form.uploadDir + md5(sql_resource.name) + fileType;
-        sql_resource.url = "http://10.106.88.87:3000/" + "upload/" + md5(sql_resource.name) + fileType;
+        var newPath = form.uploadDir + encode(sqlResource.NICKNAME) + fileType;
+        sqlResource.PATH = "http://10.106.88.87:3000/" + "upload/" + encode(sqlResource.NICKNAME) + fileType;
 
         try {
             log.info("文件上传成功，正在写入......."+"<!log>");
@@ -49,11 +50,8 @@ module.exports = function(iostream, callback) {
             callbackJson.msg = "文件写入失败，服务器程序报错！";
         }
 
-        if(!callbackJson.success) {
-            return callback.apply(this, [callbackJson]);
-        }
-
+        return callback.apply(this, [callbackJson, sqlResource]);
 
     });
-}
+};
 

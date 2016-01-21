@@ -14,6 +14,7 @@ var qUser = require("../services/queryUser.js");
 var aTask = require("../services/addTask.js");
 var uTask = require("../services/updateTask.js");
 var uFile = require("../services/uploadFile.js");
+var aFile = require("../services/addFile.js");
 
 module.exports = router;
 
@@ -131,7 +132,12 @@ router.put("/", function (req, res) {
 router.post("/info", function (req, res) {
     log.info("进入需求详情查询接口，目前传入任务ID："+req.body.taskid);
 
-    var taskInfo = {where: {TASK_ID: req.body.taskid}};
+    var taskInfo = {
+        where: {TASK_ID: req.body.taskid},
+        include: [{
+            model: null
+        }]
+    };
 
     if(!!req.body.token) {
         var tokenJson = jwt.verify(req.body.token, "secret");
@@ -143,7 +149,16 @@ router.post("/info", function (req, res) {
                     for(var i in data[0].dataValues) {
                         sendData[i.toLowerCase().replace(/\_/g,"")] = data[0].dataValues[i];
                     }
+                    var fileArray = [];
+
+                    for(var i = 0; i < data[0].Files.length; i++) {
+                        fileArray.push({
+                            "path": data[0].Files[i].dataValues.PATH,
+                            "nickname": data[0].Files[i].dataValues.NICKNAME
+                        });
+                    }
                     sendData.user = tokenJson;
+                    sendData.files = fileArray;
                     res.send({status: "success", code: 0, msg: "获取任务详情成功。", data: sendData});
                     return res.end();
                 } else {
@@ -220,8 +235,25 @@ router.put("/info", function (req, res) {
 });
 
 router.post("/modify", function (req, res) {
-    uFile(req, function (res) {
-        console.log(res);
+    uFile(req, function (result, sql) {
+        console.log(result, sql);
+        if(result.success) {
+            var task = {where: {TASK_ID: result.taskid}};
+
+            Promise.resolve(aFile(sql)).then(function (data) {
+                if(!!data) {
+                    var newStatus = {
+                        TASK_STATUS: 2
+                    };
+                    return Promise.resolve(uTask(newStatus, task));
+                } else {
+                    res.send({status: "fail", code: 0, msg: "资料提交失败，请联系系统管理员。"});
+                    return res.end();
+                }
+            }).then(function (data){
+                console.log(data);
+            });
+        }
     });
 });
 
