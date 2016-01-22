@@ -1,6 +1,6 @@
 /**
  * @Created by Administrator
- * @Date 2016/1/21.
+ * @Date 2016/1/22.
  * @author [haixiangtang@creditease.cn]
  */
 var Sequelize = require("sequelize");
@@ -12,7 +12,7 @@ var sequelize = new Sequelize(settings.db, settings.user, settings.password, {ho
     log.info(str+"<!log>");
 }});
 
-var File = sequelize.define('File', {
+var Parter = sequelize.define('Parter', {
     ID: {
         type: Sequelize.INTEGER(100),
         allowNull: true,
@@ -30,19 +30,19 @@ var File = sequelize.define('File', {
         type: Sequelize.STRING(255),
         allowNull: false,
         defaultValue: "",
-        comment: '文件的原始名称'
+        comment: '参与开发人员中文名'
     },
-    FILE_PATH: {
+    USERID: {
         type: Sequelize.STRING(350),
         allowNull: true,
         defaultValue: null,
-        comment: '文件的物理路径'
+        comment: '参与开发人员的ID'
     },
-    PATH: {
-        type: Sequelize.STRING(350),
-        allowNull: true,
-        defaultValue: null,
-        comment: '文件的网络路径'
+    GROUP: {
+        type: Sequelize.STRING(255),
+        allowNull: false,
+        defaultValue: "",
+        comment: '参与开发人员所属组织'
     },
     CREATEDAT: {
         type: Sequelize.DATE
@@ -57,4 +57,4 @@ var File = sequelize.define('File', {
     collate: 'utf8_general_ci'
 });
 
-module.exports = File;
+module.exports = Parter;

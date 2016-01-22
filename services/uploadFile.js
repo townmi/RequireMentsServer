@@ -32,9 +32,9 @@ module.exports = function(iostream, callback) {
         sqlResource.TASK_ID = fields.taskid;
         var oldPath = files.taskFile.path;
 
-        sqlResource.NICKNAME = files.taskFile.name.split(".")[0];
-        var fileType = "."+files.taskFile.name.split(".").pop();
-
+        filesName = files.taskFile.name.split(".");
+        var fileType = "."+filesName.pop();
+        sqlResource.NICKNAME = filesName.join("");
         var newPath = form.uploadDir + encode(sqlResource.NICKNAME) + fileType;
         sqlResource.PATH = "http://10.106.88.87:3000/" + "upload/" + encode(sqlResource.NICKNAME) + fileType;
 

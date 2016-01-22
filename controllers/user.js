@@ -275,7 +275,7 @@ router.put("/info", function (req, res) {
                         NICKNAME: req.body.nickname,
                         MOBILE: req.body.mobile,
                         EMAIL: req.body.email,
-                        GROUP: req.body.group.group,
+                        GROUP: req.body.group,
                         USERROLE: req.body.userrole
                     };
                     return Promise.resolve(uUser(newData, user));

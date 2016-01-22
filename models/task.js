@@ -7,7 +7,6 @@ var Sequelize = require("sequelize");
 var settings = require("../config/db.js");
 
 var log = require("../services/log.js");
-var File = require("./file.js");
 
 var sequelize = new Sequelize(settings.db, settings.user, settings.password, {host : settings.host, port : settings.port, dialect : 'mysql', logging: function (str) {
     log.info(str+"<!log>");
@@ -91,6 +90,36 @@ var Task = sequelize.define('Task', {
         allowNull: true,
         defaultValue: null,
         comment: '需求审核主管审核意见'
+    },
+    NEED_DEV: {
+        type: Sequelize.INTEGER(10),
+        allowNull: false,
+        defaultValue: 0,
+        comment: '是否需要开发介入'
+    },
+    NEED_TEST: {
+        type: Sequelize.INTEGER(10),
+        allowNull: false,
+        defaultValue: 0,
+        comment: '是否需要测试介入'
+    },
+    NEED_FE: {
+        type: Sequelize.INTEGER(10),
+        allowNull: false,
+        defaultValue: 0,
+        comment: '是否需要前端开发介入'
+    },
+    NEED_APP: {
+        type: Sequelize.INTEGER(10),
+        allowNull: false,
+        defaultValue: 0,
+        comment: '是否需要APP开发介入'
+    },
+    NEED_UI: {
+        type: Sequelize.INTEGER(10),
+        allowNull: false,
+        defaultValue: 0,
+        comment: '是否需要设计介入'
     },
     CREATEDAT: {
         type: Sequelize.DATE
