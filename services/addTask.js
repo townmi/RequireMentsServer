@@ -10,8 +10,7 @@ var Task = require("../models/task.js");
 module.exports = function(sql){
 
     return Task.sync({logging: false}).then(function () {
-
-        return Task.upsert(sql);
+        return Task.upsert(sql, {fields: ['NAME', 'BRIEF', 'BELONG', 'REVIEW_ID', 'REVIEW_NICKNAME', 'PRIORITY', 'TASKSTATUS', 'CREATOR_ID', 'CREATOR_GROUP', 'CREATOR_NICKNAME', 'TASK_ID']});
 
     }).then(
         function (data) {

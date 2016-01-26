@@ -168,22 +168,52 @@ router.delete("/", function (req, res) {
 
 
 
-router.get("/reviewlist", function (req, res) {
+router.post("/list", function (req, res) {
     log.info("进入审核人员查询接口，需要先验证用户是否登陆。");
 
-    var user = {where: {USERROLE: "leader", GROUP: "PM"}};
+    var user = {where: {}};
 
-    Promise.resolve(qUser(user)).then(function (data) {
-        if(!!data && !!data.length) {
-            var resData = [];
-            for(var i = 0; i < data.length; i++) {
-                resData.push({username: data[i].dataValues.USERNAME, nickname: data[i].dataValues.NICKNAME, userrole: data[i].dataValues.USERROLE, userid: data[i].dataValues.ID, group: data[i].dataValues.GROUP});
+
+
+    if(!!req.body.token) {
+        var tokenJson = jwt.verify(req.body.token, "secret");
+        var tokenIsJson = typeof(tokenJson) == "object" && Object.prototype.toString.call(tokenJson).toLowerCase() == "[object object]" && !tokenJson.length;
+        if (tokenIsJson) {
+            if(req.body.method === "review") {
+                user.where.USERROLE = "leader";
+                user.where.GROUP = "PM";
+            } else if(req.body.method === "getGroup") {
+                user.group= ['GROUP'];
+                user.where.$not = [
+                    {GROUP:["PM"]}
+                ];
+                user.where.USERROLE = 'header';
+
             }
-            res.send({status: "success", code: 0, data: resData, msg: "请求成功，审核人员明细已返回。"});
+
+            Promise.resolve(qUser(user)).then(function (data) {
+                if(!!data && !!data.length) {
+                    var sendData = [];
+                    for(var j = 0; j < data.length; j++) {
+                        sendData[j] = {};
+                        for(var i in data[j].dataValues) {
+                            sendData[j][i.toLowerCase().replace(/\_/g,"")] = data[j].dataValues[i];
+                        }
+                    }
+
+                    res.send({status: "success", code: 0, data: sendData, msg: "请求成功，审核人员明细已返回。"});
+                } else {
+                    return res.send({status: "fail", code: 1, msg: "获取数据失败"});
+                }
+            });
         } else {
-            return res.send({status: "fail", code: 1, msg: "获取数据失败"});
+
         }
-    });
+
+    } else {
+
+    }
+
 
 });
 

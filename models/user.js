@@ -68,6 +68,12 @@ var User = sequelize.define('User', {
         defaultValue: null,
         comment: '用户组'
     },
+    GROUP_STR: {
+        type: Sequelize.STRING(250),
+        allowNull: true,
+        defaultValue: null,
+        comment: '用户组名称'
+    },
     CREATEDAT: {
         type: Sequelize.DATE
     },

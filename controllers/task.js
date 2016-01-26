@@ -6,6 +6,7 @@
 var router = require('express').Router();
 var Promise = require("bluebird");
 var jwt = require('jsonwebtoken');
+var Sequelize = require("sequelize");
 
 var log = require("../services/log.js");
 var encode = require("../services/encode.js");
@@ -89,7 +90,7 @@ router.put("/", function (req, res) {
             task.NAME = req.body.name;
             task.BRIEF = req.body.brief;
             task.BELONG = req.body.belong;
-            task.REVIEW_ID = req.body.reviewUser.userid;
+            task.REVIEW_ID = req.body.reviewUser.id;
             task.REVIEW_NICKNAME = req.body.reviewUser.nickname;
             task.PRIORITY = req.body.priority;
             task.TASKSTATUS = 0;
@@ -155,36 +156,23 @@ router.post("/info", function (req, res) {
                     for(var i in data[0].dataValues) {
                         sendData[i.toLowerCase().replace(/\_/g,"")] = data[0].dataValues[i];
                     }
-                    //delete sendData.files;
-                    var fileArray = [], parterArray = [];
-                    //
-                    /*for(var i = 0; i < data[0].Files.length; i++) {
-                        var single = {};
-                        for(var j in data[0].Files[i]) {
-                            single[j.toLowerCase().replace(/\_/g,"")] = data[0].Files[i][j];
-                        }
-                        fileArray.push(single);
-                    }*/
-
                     for(var i = 0; i < sendData.files.length; i++) {
-                        for(var j in sendData.files[i]) {
-                            sendData.files[i][j.toLowerCase().replace(/\_/g,"")] = sendData.files[i][j];
+                        for(var j in sendData.files[i].dataValues) {
+                            var name = j.toLowerCase().replace(/\_/g,"");
+                            var value = sendData.files[i].dataValues[j];
+                            delete sendData.files[i].dataValues[j];
+                            sendData.files[i].dataValues[name] = value;
                         }
                     }
-
-                    //
-                    //for(var i = 0; i < data[0].Parters.length; i++) {
-                    //    var single = {};
-                    //    for(var j in data[0].Parters[i]) {
-                    //        single[j.toLowerCase().replace(/\_/g,"")] = data[0].Parters[i][j];
-                    //    }
-                    //    parterArray.push(single);
-                    //}
-
+                    for(var i = 0; i < sendData.parters.length; i++) {
+                        for(var j in sendData.parters[i].dataValues) {
+                            var name = j.toLowerCase().replace(/\_/g,"");
+                            var value = sendData.parters[i].dataValues[j];
+                            delete sendData.parters[i].dataValues[j];
+                            sendData.parters[i].dataValues[name] = value;
+                        }
+                    }
                     sendData.user = tokenJson;
-                    //sendData.files = fileArray;
-                    //sendData.parters = parterArray;
-                    
                     res.send({status: "success", code: 0, msg: "获取任务详情成功。", data: sendData});
                     return res.end();
                 } else {
@@ -197,9 +185,6 @@ router.post("/info", function (req, res) {
             return res.end();
         }
     } else {
-        //uFile(req, function (res) {
-        //    console.log(res);
-        //});
         res.send({status: "fail", code: 1, msg: "获取任务列表失败，用户未登录，请先登录。"});
         return res.end();
     }
@@ -223,35 +208,86 @@ router.put("/info", function (req, res) {
             Promise.resolve(qTask(task)).then(function (data) {
                 if(!!data && !!data.length) {
                     if(data[0].dataValues.REVIEW_ID === tokenJson.id) {
+                        //需求审核成功
                         if(data[0].dataValues.TASK_STATUS === 0 && req.body.audit === "success") {
                             var newStatus = {
                                 REVIEW_COMMENT: req.body.comment,
-                                TASK_STATUS: 1
+                                TASK_STATUS: 1,
+                                REVIEW_DATE: new Sequelize.fn('NOW')
                             };
+                            task.fields = ['REVIEW_COMMENT', 'TASK_STATUS', 'REVIEW_DATE'];
                             return Promise.resolve(uTask(newStatus, task));
                         }
                     } else if(data[0].dataValues.TASK_STATUS === 2) {
-                        /**
-                         *
-                         * @type {string[]}
-                         */
-                        var NEED = ["NEED_UI", "NEED_FE", "NEED_APP", "NEED_DEV", "NEED_TEST"];
-
+                        // 产品经理发起需求人员招募
                         var newStatus = {
-                            TASK_STATUS: 3
+                            TASK_STATUS: 2,
+                            POST_DATE: new Sequelize.fn('NOW')
                         };
-                        for(var i = 0; i < NEED.length; i++) {
-                            newStatus[NEED[i]] = 0;
-                        }
-                        if(!!req.body.need && !!req.body.need.length) {
-                            for(var i = 0; i < req.body.need.length; i++) {
-                                newStatus[NEED[req.body.need[i]]] = 1;
-                            }
-                        } else {
+                        if(!req.body.need && !req.body.need.length) {
                             res.send({status: "fail", code: 4, msg: "修改需求失败，确认不选择任何成员么，请联系系统管理员。"});
                             return res.end();
                         }
+                        task.fields = ["TASK_STATUS", "POST_DATE"];
+                        return Promise.resolve(uTask(newStatus, task)).then(function (data) {
+                            if(!!data && !!data.length) {
+                                if(!data[0]){
+                                    res.send({status: "fail", code: 5, msg: "修改需求失败，请求信息不合法，请重新提交。"});
+                                    return res.end();
+                                } else {
+                                    // 需求状态改变成功，需要对parter进行标记
+                                    var user = {where: {USERROLE: "header", $or: [{GROUP: req.body.need}]}};
+
+                                    return Promise.resolve(qUser(user)).then(function (data) {
+                                        if(!!data && !!data.length) {
+                                            var needParter = [];
+
+                                            for(var i = 0; i < data.length; i++) {
+                                                needParter.push({
+
+                                                });
+                                            }
+
+                                            return Promise.resolve(aParter(needParter));
+
+                                        } else {
+                                            res.send({status: "fail", code: 3, msg: "获取任务详情失败，请联系系统管理员。"});
+                                            return res.end();
+                                        }
+                                    });
+                                    //return Promise.resolve();
+                                }
+                            } else {
+                                res.send({status: "fail", code: 4, msg: "修改需求，请联系系统管理员。"});
+                                return res.end();
+                            }
+                        });
+
+                    } else if(data[0].dataValues.TASK_STATUS === 3) {
+                        // 需求锁定，需求人员配置完成、大家先下载文档。
+                        var newStatus = {
+                            TASK_STATUS: 4,
+                            LOCK_DATE: new Sequelize.fn('NOW')
+                        };
+                        task.fields = ['TASK_STATUS', 'LOCK_DATE'];
                         return Promise.resolve(uTask(newStatus, task));
+                    } else if(data[0].dataValues.TASK_STATUS === 4) {
+                        // 需求进入评审阶段、产品经理发起会议邀请
+                        if(!req.body.time || !req.body.room) {
+                            res.send({status: "fail", code: 3, msg: "获取任务详情失败，请联系系统管理员。"});
+                            return res.end();
+                        } else {
+                            var newStatus = {
+                                TASK_STATUS: 5,
+                                MEET_TIME: Number(req.body.time),
+                                MEET_ROOM: req.body.room,
+                                AUDIT_DATE: new Sequelize.fn('NOW')
+                            };
+                            task.fields = ['TASK_STATUS', 'MEET_TIME', 'MEET_ROOM', 'AUDIT_DATE'];
+                            return Promise.resolve(uTask(newStatus, task)).then(function (res) {
+                                
+                            });
+                        }
                     }
                 } else {
                     res.send({status: "fail", code: 3, msg: "获取任务详情失败，请联系系统管理员。"});
@@ -291,8 +327,10 @@ router.post("/modify", function (req, res) {
             Promise.resolve(aFile(sql)).then(function (data) {
                 if(!!data) {
                     var newStatus = {
-                        TASK_STATUS: 2
+                        TASK_STATUS: 2,
+                        UPLOAD_DATE: new Sequelize.fn('NOW')
                     };
+                    task.fields = ['UPLOAD_DATE', 'TASK_STATUS'];
                     return Promise.resolve(uTask(newStatus, task));
                 } else {
                     res.send({status: "fail", code: 0, msg: "资料提交失败，请联系系统管理员。"});

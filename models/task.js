@@ -91,6 +91,27 @@ var Task = sequelize.define('Task', {
         defaultValue: null,
         comment: '需求审核主管审核意见'
     },
+    REVIEW_DATE: {
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW
+    },
+    UPLOAD_DATE: {
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW
+    },
+    POST_DATE: {
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW
+    },
+    LOCK_DATE: {
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW
+    },
+    AUDIT_DATE: {
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.NOW
+    },
+    /*
     NEED_DEV: {
         type: Sequelize.INTEGER(10),
         allowNull: false,
@@ -120,6 +141,19 @@ var Task = sequelize.define('Task', {
         allowNull: false,
         defaultValue: 0,
         comment: '是否需要设计介入'
+    },
+    */
+    MEET_TIME: {
+        type: Sequelize.BIGINT,
+        allowNull: false,
+        defaultValue: 0,
+        comment: '多方评审时间点'
+    },
+    MEET_ROOM: {
+        type: Sequelize.STRING(250),
+        allowNull: false,
+        defaultValue: "",
+        comment: '多方评审会议室'
     },
     CREATEDAT: {
         type: Sequelize.DATE
