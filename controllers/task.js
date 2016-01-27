@@ -14,12 +14,16 @@ var qTask = require("../services/queryTask.js");
 var qUser = require("../services/queryUser.js");
 var aTask = require("../services/addTask.js");
 var uTask = require("../services/updateTask.js");
-var uFile = require("../services/uploadFile.js");
 var aFile = require("../services/addFile.js");
+
+var uFile = require("../services/uploadFile.js");
 
 var aParter = require("../services/addParter.js");
 var dParter = require("../services/deleteParter.js");
 
+var aTeam = require("../services/addTeam.js");
+var dTeam = require("../services/deleteTeam.js");
+var uTeam = require("../services/updateTeam.js");
 module.exports = router;
 
 router.get("/", function (req, res) {
@@ -142,6 +146,8 @@ router.post("/info", function (req, res) {
             model: null
         },{
             model: null
+        },{
+            model: null
         }]
 
     };
@@ -170,6 +176,14 @@ router.post("/info", function (req, res) {
                             var value = sendData.parters[i].dataValues[j];
                             delete sendData.parters[i].dataValues[j];
                             sendData.parters[i].dataValues[name] = value;
+                        }
+                    }
+                    for(var i = 0; i < sendData.teams.length; i++) {
+                        for(var j in sendData.teams[i].dataValues) {
+                            var name = j.toLowerCase().replace(/\_/g,"");
+                            var value = sendData.teams[i].dataValues[j];
+                            delete sendData.teams[i].dataValues[j];
+                            sendData.teams[i].dataValues[name] = value;
                         }
                     }
                     sendData.user = tokenJson;
@@ -218,52 +232,7 @@ router.put("/info", function (req, res) {
                             task.fields = ['REVIEW_COMMENT', 'TASK_STATUS', 'REVIEW_DATE'];
                             return Promise.resolve(uTask(newStatus, task));
                         }
-                    } else if(data[0].dataValues.TASK_STATUS === 2) {
-                        // 产品经理发起需求人员招募
-                        var newStatus = {
-                            TASK_STATUS: 2,
-                            POST_DATE: new Sequelize.fn('NOW')
-                        };
-                        if(!req.body.need && !req.body.need.length) {
-                            res.send({status: "fail", code: 4, msg: "修改需求失败，确认不选择任何成员么，请联系系统管理员。"});
-                            return res.end();
-                        }
-                        task.fields = ["TASK_STATUS", "POST_DATE"];
-                        return Promise.resolve(uTask(newStatus, task)).then(function (data) {
-                            if(!!data && !!data.length) {
-                                if(!data[0]){
-                                    res.send({status: "fail", code: 5, msg: "修改需求失败，请求信息不合法，请重新提交。"});
-                                    return res.end();
-                                } else {
-                                    // 需求状态改变成功，需要对parter进行标记
-                                    var user = {where: {USERROLE: "header", $or: [{GROUP: req.body.need}]}};
-
-                                    return Promise.resolve(qUser(user)).then(function (data) {
-                                        if(!!data && !!data.length) {
-                                            var needParter = [];
-
-                                            for(var i = 0; i < data.length; i++) {
-                                                needParter.push({
-
-                                                });
-                                            }
-
-                                            return Promise.resolve(aParter(needParter));
-
-                                        } else {
-                                            res.send({status: "fail", code: 3, msg: "获取任务详情失败，请联系系统管理员。"});
-                                            return res.end();
-                                        }
-                                    });
-                                    //return Promise.resolve();
-                                }
-                            } else {
-                                res.send({status: "fail", code: 4, msg: "修改需求，请联系系统管理员。"});
-                                return res.end();
-                            }
-                        });
-
-                    } else if(data[0].dataValues.TASK_STATUS === 3) {
+                    }  else if(data[0].dataValues.TASK_STATUS === 3) {
                         // 需求锁定，需求人员配置完成、大家先下载文档。
                         var newStatus = {
                             TASK_STATUS: 4,
@@ -288,6 +257,9 @@ router.put("/info", function (req, res) {
                                 
                             });
                         }
+                    } else if(data[0].dataValues.TASK_STATUS === 5) {
+                        //各个组长给出开发预估时间线
+
                     }
                 } else {
                     res.send({status: "fail", code: 3, msg: "获取任务详情失败，请联系系统管理员。"});
@@ -453,7 +425,12 @@ router.put("/user", function (req, res) {
 
                 }
             }).then(function (data) {
-                console.log(data);
+                if(!!data && !!data.length) {
+                    res.send({status: "success", code: 0, msg: "选择开发人员成功。"});
+                    return res.end();
+                } else {
+
+                }
             });
 
         } else {
@@ -467,7 +444,105 @@ router.put("/user", function (req, res) {
 });
 
 
+router.put("/team", function (req, res) {
+    log.info("进入需求更新操作接口，目前传入任务ID："+req.body.taskid);
 
+    if(!!req.body.token) {
+        var tokenJson = jwt.verify(req.body.token, "secret");
+        var tokenIsJson = typeof(tokenJson) == "object" && Object.prototype.toString.call(tokenJson).toLowerCase() == "[object object]" && !tokenJson.length;
+        if (tokenIsJson) {
+            var task = {
+                where: {
+                    TASK_ID: req.body.taskid
+                }
+            };
+            Promise.resolve(qTask(task)).then(function (data) {
+
+                if(!!data && !!data.length) {
+
+                    var oldTeam = {
+                        where: {
+                            TASK_ID: req.body.taskid
+                        }
+                    };
+
+                    if(data[0].dataValues.TASK_STATUS === 5) {
+                        var newStatus = {
+                            START_DATE: req.body.startDate,
+                            END_DATE: req.body.endDate
+                        };
+                        oldTeam.where.GROUP = req.body.group;
+                        return Promise.resolve(uTeam(newStatus, oldTeam));
+                    } else {
+
+                        return Promise.resolve(dTeam(oldTeam));
+                    }
+
+                } else {
+
+                }
+
+            }).then(function (data) {
+
+                if(data === null) {
+
+                } else if(!!req.body.need && !!req.body.need.length) {
+                    // 组织类别
+                    var g_s = {
+                        "FE": "前端工程师",
+                        "DEV": "开发工程师",
+                        "PM": "产品经理",
+                        "UI": "设计师",
+                        "TEST": "测试工程师"
+                    };
+                    var newTeam = [];
+
+                    for(var i = 0; i < req.body.need.length; i++) {
+                        newTeam.push({
+                            TASK_ID: req.body.taskid,
+                            GROUP: req.body.need[i],
+                            GROUP_STR: g_s[req.body.need[i]]
+                        });
+                    }
+                    return Promise.resolve(aTeam(newTeam));
+
+                } else if(!!req.body.group && !!req.body.startDate && !!req.body.endDate) {
+                    console.log(data);
+                }
+            }).then(function (data) {
+                if(!!data && !!data.length) {
+                    var newStatus = {
+                        TASK_STATUS: 3,
+                        POST_DATE: new Sequelize.fn('NOW')
+                    };
+
+                    task.fields = ["TASK_STATUS", "POST_DATE"];
+                    return Promise.resolve(uTask(newStatus, task));
+                } else {
+
+                }
+            }).then(function (data) {
+                if(!!data && !!data.length) {
+                    if(!data[0]){
+                        res.send({status: "fail", code: 5, msg: "修改需求失败，请求信息不合法，请重新提交。"});
+                        return res.end();
+                    } else {
+                        res.send({status: "success", code: 0, msg: "修改需求成功。"});
+                        return res.end();
+                    }
+                }
+            });
+
+
+        } else {
+            res.send({status: "fail", code: 2, msg: "获取任务列表失败，l，请先登录。"});
+            return res.end();
+        }
+    } else {
+        res.send({status: "fail", code: 1, msg: "获取任务列表失败，用户未登录，请先登录。"});
+        return res.end();
+    }
+});
 
 
 

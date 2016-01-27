@@ -79,7 +79,7 @@ router.post("/", function (req, res) {
     }
 
     user.where.PASSWORD = encode(strEnc.strDec(req.body.password, req.body.tmpname, req.body.tmpname, req.body.tmpname));
-    console.log(user);
+
     Promise.resolve(qUser(user)).then(function (data) {
         if(!!data && !!data.length) {
             var token = jwt.sign({
@@ -231,17 +231,11 @@ router.post("/info", function (req, res) {
 
             Promise.resolve(qUser(user)).then(function (data) {
                 if(!!data && !!data.length) {
-                    var userData = {
-                        id: data[0].dataValues.ID,
-                        email: data[0].dataValues.EMAIL,
-                        mobile: data[0].dataValues.MOBILE,
-                        username: data[0].dataValues.USERNAME,
-                        nickname: data[0].dataValues.NICKNAME,
-                        userrole: data[0].dataValues.USERROLE,
-                        group: data[0].dataValues.GROUP
-                    };
-
-                    res.send({"status": "success", code: 0, "data": userData, mgs: ""});
+                    var sendData = {};
+                    for(var i in data[0].dataValues) {
+                        sendData[i.toLowerCase().replace(/\_/g,"")] = data[0].dataValues[i];
+                    }
+                    res.send({"status": "success", code: 0, "data": sendData, mgs: ""});
                     return res.end();
                 } else {
                     log.warn("修改资料失败，用户认证信息不合法。");

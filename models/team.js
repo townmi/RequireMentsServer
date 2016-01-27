@@ -1,6 +1,6 @@
 /**
  * @Created by Administrator
- * @Date 2016/1/22.
+ * @Date 2016/1/27.
  * @author [haixiangtang@creditease.cn]
  */
 var Sequelize = require("sequelize");
@@ -12,7 +12,7 @@ var sequelize = new Sequelize(settings.db, settings.user, settings.password, {ho
     log.info(str+"<!log>");
 }});
 
-var Parter = sequelize.define('Parter', {
+var Team = sequelize.define('Team', {
     ID: {
         type: Sequelize.INTEGER(100),
         allowNull: true,
@@ -26,47 +26,41 @@ var Parter = sequelize.define('Parter', {
         defaultValue: "",
         comment: '用户ID/关联task表'
     },
-    USERID: {
-        type: Sequelize.STRING(350),
+    GROUP_ID: {
+        type: Sequelize.INTEGER(50),
         allowNull: true,
         defaultValue: null,
-        comment: '参与开发人员的ID'
-    },
-    EMAIL: {
-        type: Sequelize.STRING(50),
-        allowNull: true,
-        defaultValue: null,
-        comment: '邮箱'
-    },
-    MOBILE: {
-        type: Sequelize.STRING(50),
-        allowNull: true,
-        defaultValue: null,
-        comment: '手机'
-    },
-    USERNAME: {
-        type: Sequelize.STRING(50),
-        allowNull: true,
-        defaultValue: null,
-        comment: '用户'
-    },
-    NICKNAME: {
-        type: Sequelize.STRING(255),
-        allowNull: false,
-        defaultValue: "",
-        comment: '参与开发人员中文名'
-    },
-    USERROLE: {
-        type: Sequelize.STRING(150),
-        allowNull: true,
-        defaultValue: null,
-        comment: '用户角色'
+        comment: '参与该需求的小组ID'
     },
     GROUP: {
         type: Sequelize.STRING(255),
         allowNull: false,
         defaultValue: "",
         comment: '参与该需求的小组'
+    },
+    GROUP_STR: {
+        type: Sequelize.STRING(150),
+        allowNull: true,
+        defaultValue: null,
+        comment: '参与该需求的小组中文名称'
+    },
+    START_DATE: {
+        type: Sequelize.BIGINT,
+        allowNull: true,
+        defaultValue: null,
+        comment: '参与该需求的小组，需要开发的周期时间|规定的起始日期'
+    },
+    END_DATE: {
+        type: Sequelize.BIGINT,
+        allowNull: true,
+        defaultValue: null,
+        comment: '参与该需求的小组，需要开发的周期时间|规定的截至日期'
+    },
+    NEED_DAYS: {
+        type: Sequelize.INTEGER(100),
+        allowNull: true,
+        defaultValue: null,
+        comment: '参与该需求的小组，需要开发的周期时间，时间总天数'
     },
     CREATEDAT: {
         type: Sequelize.DATE
@@ -81,4 +75,4 @@ var Parter = sequelize.define('Parter', {
     collate: 'utf8_general_ci'
 });
 
-module.exports = Parter;
+module.exports = Team;
