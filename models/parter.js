@@ -27,7 +27,7 @@ var Parter = sequelize.define('Parter', {
         comment: '用户ID/关联task表'
     },
     USERID: {
-        type: Sequelize.STRING(350),
+        type: Sequelize.INTEGER(100),
         allowNull: true,
         defaultValue: null,
         comment: '参与开发人员的ID'

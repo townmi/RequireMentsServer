@@ -173,8 +173,6 @@ router.post("/list", function (req, res) {
 
     var user = {where: {}};
 
-
-
     if(!!req.body.token) {
         var tokenJson = jwt.verify(req.body.token, "secret");
         var tokenIsJson = typeof(tokenJson) == "object" && Object.prototype.toString.call(tokenJson).toLowerCase() == "[object object]" && !tokenJson.length;

@@ -19,9 +19,11 @@ var aFile = require("../services/addFile.js");
 var uFile = require("../services/uploadFile.js");
 
 var aParter = require("../services/addParter.js");
+var qParter = require("../services/queryParter.js");
 var dParter = require("../services/deleteParter.js");
 
 var aTeam = require("../services/addTeam.js");
+var qTeam = require("../services/queryTeam.js");
 var dTeam = require("../services/deleteTeam.js");
 var uTeam = require("../services/updateTeam.js");
 module.exports = router;
@@ -40,37 +42,103 @@ router.get("/", function (req, res) {
 router.post("/", function (req, res) {
     log.info("进入需求查询接口（与当前用户匹配的需求）");
     var task  = {where: {}};
-
+    var user  = {};
     if(!!req.body.token) {
         var tokenJson = jwt.verify(req.body.token, "secret");
         var tokenIsJson = typeof(tokenJson) == "object" && Object.prototype.toString.call(tokenJson).toLowerCase() == "[object object]" && !tokenJson.length;
         if( tokenIsJson ) {
-            Promise.resolve(qTask(task)).then(function (data) {
+            Promise.resolve(qUser({
+                where: {
+                    ID: tokenJson.id,
+                    USERNAME: tokenJson.who
+                }
+            })).then(function (data) {
                 if(!!data && !!data.length) {
-                    var sendData = [];
-                    for(var i = 0; i < data.length; i++) {
-                        sendData.push({
-                            "id": data[i].dataValues.ID,
-                            "taskid": data[i].dataValues.TASK_ID,
-                            "taskstatus": data[i].dataValues.TASK_STATUS,
-                            "creatorid": data[i].dataValues.CREATOR_ID,
-                            "creatornickname": data[i].dataValues.CREATOR_NICKNAME,
-                            "creatorgroup": data[i].dataValues.CREATOR_GROUP,
-                            "name": data[i].dataValues.NAME,
-                            "brief": data[i].dataValues.BRIEF,
-                            "priority": data[i].dataValues.PRIORITY,
-                            "updatetime": data[i].dataValues.UPDATEAT
+                    for(var i in data[0].dataValues) {
+                        user[i.toLowerCase().replace(/\_/g,"")] = data[0].dataValues[i];
+                    }
+                    task.where = {
+                        $or: [
+                            {CREATOR_ID: user.id},
+                            {REVIEW_ID: user.id}
+                        ]
+                    };
+                    // 先拿token的id去查team和pater表，拿到taskid在查task表
+                    return Promise.resolve(qParter({
+                        where: {
+                            USERID: user.id
+                        }
+                    }));
+
+                } else {
+                    res.send({status: "fail", code: 2, msg: "获取任务列表失败，请联系系统管理员。"});
+                    return res.end();
+                }
+            }).then(function (data) {
+
+                if(!!data) {
+                    if(!!data.length) {
+                        for(var i = 0; i < data.length; i++) {
+                            task.where.$or.push({
+                                TASK_ID: data[i].dataValues.TASK_ID
+                            });
+                        }
+                    }
+                    if(user.userrole === "header") {
+                        return Promise.resolve(qTeam({
+                            where: {
+                                Group: user.group
+                            }
+                        })).then(function (data) {
+                            if(!!data) {
+                                if(!!data.length) {
+                                    for(var i = 0; i < data.length; i++) {
+                                        task.where.$or.push({
+                                            TASK_ID: data[i].dataValues.TASK_ID
+                                        });
+                                    }
+                                }
+                                return Promise.resolve(qTask(task));
+
+                            } else {
+
+                            }
                         });
                     }
-                    res.send({status: "success", code: 0, msg: "获取任务列表成功。", data: sendData});
+                    return Promise.resolve(qTask(task));
+                } else {
+
+                }
+                
+            }).then(function (data) {
+                if(!!data) {
+                    var sendData = [];
+                    if(!!data.length) {
+                        for(var i = 0; i < data.length; i++) {
+                            sendData.push({
+                                "id": data[i].dataValues.ID,
+                                "taskid": data[i].dataValues.TASK_ID,
+                                "taskstatus": data[i].dataValues.TASK_STATUS,
+                                "creatorid": data[i].dataValues.CREATOR_ID,
+                                "creatornickname": data[i].dataValues.CREATOR_NICKNAME,
+                                "creatorgroup": data[i].dataValues.CREATOR_GROUP,
+                                "name": data[i].dataValues.NAME,
+                                "brief": data[i].dataValues.BRIEF,
+                                "priority": data[i].dataValues.PRIORITY,
+                                "updatetime": data[i].dataValues.UPDATEAT
+                            });
+                        }
+                    }
+
+                    res.send({status: "success", code: 0, msg: "获取任务列表成功。", data: sendData, user: user});
                     return res.end();
                 } else {
-                    res.send({status: "fail", code: 3, msg: "获取任务列表失败，请联系系统管理员。"});
+                    res.send({status: "fail", code: 4, msg: "获取任务列表失败，请联系系统管理员。"});
                     return res.end();
                 }
             });
         } else {
-            res.send({status: "fail", code: 2, msg: "获取任务列表失败，TOKEN失效，需要重新认证。"});
+            res.send({status: "fail", code: 3, msg: "获取任务列表失败，TOKEN失效，需要重新认证。"});
             return res.end();
         }
     } else {
@@ -257,9 +325,13 @@ router.put("/info", function (req, res) {
                                 
                             });
                         }
-                    } else if(data[0].dataValues.TASK_STATUS === 5) {
-                        //各个组长给出开发预估时间线
+                    } else if(data[0].dataValues.TASK_STATUS === 5 && req.body.taskstatus == data[0].dataValues.TASK_STATUS) {
+                        //当时间期限定好后，产品经理同意后，需求将推入开发阶段
+                        var newStatus = {
+                            TASK_STATUS: 6
+                        };
 
+                        return Promise.resolve(uTask(newStatus, task));
                     }
                 } else {
                     res.send({status: "fail", code: 3, msg: "获取任务详情失败，请联系系统管理员。"});
@@ -545,7 +617,64 @@ router.put("/team", function (req, res) {
 });
 
 
+router.post("/all", function (req, res) {
 
+    log.info("进入需求查询接口（与当前用户匹配的需求）");
+    var task  = {where: {}};
+    var user  = {};
+    if(!!req.body.token) {
+        var tokenJson = jwt.verify(req.body.token, "secret");
+        var tokenIsJson = typeof(tokenJson) == "object" && Object.prototype.toString.call(tokenJson).toLowerCase() == "[object object]" && !tokenJson.length;
+        if( tokenIsJson ) {
+            Promise.resolve(qUser({
+                where: {
+                    ID: tokenJson.id,
+                    USERNAME: tokenJson.who
+                }
+            })).then(function (data) {
+                if(!!data && !!data.length) {
+                    for(var i in data[0].dataValues) {
+                        user[i.toLowerCase().replace(/\_/g,"")] = data[0].dataValues[i];
+                    }
+                    return Promise.resolve(qTask(task));
+                } else {
+                    res.send({status: "fail", code: 2, msg: "获取任务列表失败，请联系系统管理员。"});
+                    return res.end();
+                }
+            }).then(function (data) {
+                if(!!data && !!data.length) {
+                    var sendData = [];
+                    for(var i = 0; i < data.length; i++) {
+                        sendData.push({
+                            "id": data[i].dataValues.ID,
+                            "taskid": data[i].dataValues.TASK_ID,
+                            "taskstatus": data[i].dataValues.TASK_STATUS,
+                            "creatorid": data[i].dataValues.CREATOR_ID,
+                            "creatornickname": data[i].dataValues.CREATOR_NICKNAME,
+                            "creatorgroup": data[i].dataValues.CREATOR_GROUP,
+                            "name": data[i].dataValues.NAME,
+                            "brief": data[i].dataValues.BRIEF,
+                            "priority": data[i].dataValues.PRIORITY,
+                            "updatetime": data[i].dataValues.UPDATEAT
+                        });
+                    }
+                    res.send({status: "success", code: 0, msg: "获取任务列表成功。", data: sendData, user: user});
+                    return res.end();
+                } else {
+                    res.send({status: "fail", code: 4, msg: "获取任务列表失败，请联系系统管理员。"});
+                    return res.end();
+                }
+            });
+        } else {
+            res.send({status: "fail", code: 3, msg: "获取任务列表失败，TOKEN失效，需要重新认证。"});
+            return res.end();
+        }
+    } else {
+        res.send({status: "fail", code: 1, msg: "获取任务列表失败，用户未登录，请先登录。"});
+        return res.end();
+    }
+
+});
 
 
 
